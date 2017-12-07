@@ -52,6 +52,7 @@
 
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{subcaption}
 
  \title{Uncertainty Quantification Pertinent to Wind Farm Flow Physics and Modeling}
 
@@ -96,7 +97,7 @@
 \maketitle
 
 \begin{abstract}
-This paper attempts to identify and quantify the uncertainties associated with the modeling of wind farm and flow physics in wind farms. Different aspects and types of uncertainties in modeling the atmosphere and rotor using different fidelity methods are explained. A description of the uncertainty quantification algorithms is also presented. This is followed by some case studies of the identification and quantification of relevant uncertainties. The first one pertains to the input parameters and model constants for a wind resource assessment problem on a complex terrain. The second one explains the uncertainties associated with a turbine-turbine interaction problem in atmospheric boundary layer using different actuator line modeling approaches for rotors. This is further exemplified using the aleatoric and epistemic uncertainties in blade loads as a result of using actuator line method, followed by a discussion on the physical propagation of these uncertainties downstream. The third type of case study is that of a 3-D cosine hill where the polynomial chaos algorithm is applied to propagate the uncertainties in model constants for Reynolds-averaged Navier-Stokes equations and investigate their effect on the flow-field.    
+This paper attempts to identify and quantify the uncertainties associated with the modeling of wind farm and flow physics in wind farms. Different aspects and types of uncertainties in modeling the atmosphere and rotor using different fidelity methods are presented. A description of the uncertainty quantification algorithms is also presented. This is followed by some case studies of the identification and quantification of relevant uncertainties. The first one pertains to the input parameters and model constants for a wind resource assessment problem on a complex terrain. The second one explains the uncertainties associated with a turbine-turbine interaction problem in atmospheric boundary layer using different actuator line modeling approaches for rotors. This is further exemplified using the aleatoric and epistemic uncertainties in blade loads as a result of using actuator line method, followed by a discussion on the physical propagation of these uncertainties downstream. The third type of case study is that of a 3-D cosine hill where the polynomial chaos algorithm is applied to propagate the uncertainties in model constants for Reynolds-averaged Navier-Stokes equations and investigate their effect on the flow-field.    
 \end{abstract}
 
 \section*{Nomenclature}
@@ -187,11 +188,50 @@ As mentioned above, once the atmosphere has been modeled, the turbines are model
 \section{Algorithm for uncertainty propagation} \label{uq_algo}
 Having given an overview of different aspects of UQ pertinent to wind farm in the preceding sections, this section explains the algorithm used for propagation of uncertainty. This algorithm is used in the case study on 3-D cosine hill presented in section \ref{cosineHill}
 
-\subsection{Polynomial chaos}
- [\textcolor{red}{To be completed}]
+\subsection{Polynomial chaos} \label{polynomial_chaos}
+The poynomial chaos approach to modeling the uncertainty propagation falls into the category of spectral stochastic methods.\cite{hosder:aiaa2010,xiu:jcp2003, xiu:siam2002} The main idea of the polynomial chaos is to represent a random field using the product of stocahstic and deterministic components. The decomposition of the random field $\alpha^*$ takes the following form\cite{hosder:aiaa2010}
 
-\subsection{Any other algorithm used} 
-[\textcolor{red}{To be completed}]
+\begin{equation}\label{eq:pc1}
+\alpha^*(x_i,t,\xi_i) \approx \sum_{j=0}^P \alpha_j(x_i,t) \Psi_j(\xi_i).
+\end{equation}
+The decompsition in Eq.~(\ref{eq:pc1}) makes the use of determistic coefficients $\alpha_j(x_i,t)$ that depend on space and time and the finite-dimensional stochastic basis defined by the set of orthogonal vectors $\Psi_j(\xi_i)$. The sepration between stochastic and deterministic parts of a randim functions allows the use of the poolynomila chaos in practical applications. The stochastic basis is fixed for the given input probability density function associated with random variables and the coefficients $\alpha_j(x_i,t)$ need to be determined. Therefore, the random process is represented in the known stochastic basis by determining the coefficients $\alpha_j(x_i,t)$. This simplifies the problem of solving the stochastic partial differntial and makes it computationally tractable.
+
+Several different approaches to computing the coefficients have been proposed\cite{hosder:aiaa2010}. In general the polynimial chaos nethods are divided in intrusive and non-intrusive polynomial chaos methods. Intrusive methods directly substitute expression from Eq.~(\ref{eq:pc1}) into the stochastic partial differential equation. This approach is effective for linear problems but it may produce complex expressions that are hard to discretize and effectively numericaly couple in case of non-linear problems. On the other hand, Point-collocation non-intrusie polynomial chaos (NIPC) is based on choosing $P+1$ vectors $\xi_i$ for which the underlying stocshatic is evaluated in determinitic manner. In doing so, the following linear problem is defined at every point in the computational domain:\cite{hosder:aiaa2010}
+\begin{equation}\label{eq:pc2}
+\left[
+\begin{array}{cccc}
+ \Psi_0(\xi_i^0) & \Psi_i(\xi_i^0) & \cdots & \Psi_P(\xi_i^0) \\
+ \Psi_0(\xi_i^1) & \Psi_i(\xi_i^1) & \cdots & \Psi_P(\xi_i^1) \\
+ \vdots         &  \vdots         &        & \vdots          \\
+ \Psi_0(\xi_i^P) & \Psi_i(\xi_i^P) & \cdots & \Psi_P(\xi_i^P)
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+\alpha_o(x_i,t)\\
+\alpha_1(x_i,t)\\
+\vdots\\
+\alpha_P(x_i,t)\\
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+\alpha^*(x_i,t,\xi_i^0)\\
+\alpha^*(x_i,t,\xi_i^1)\\
+\vdots\\
+\alpha^*(x_i,t,\xi_i^P)\\
+\end{array}
+\right]
+\end{equation}
+The problem of the determining the unknown coefficients in point-collocation methods is reduced to the evaluation of the partial differential equation for the
+finite number of input parameters that depend on the random variable $\xi_i$ and solving a small linear problem at every point in the computational domain. Once the unknown coefficients are computed at every point in the domain, the new mean and statistical moments can be computed.
+
+The main advantage of the point-collocation NIPC approach to propagating uncertainties is that the underlying algorithm treats the code that evaluated the discrete representation of the stoacstic partial differential equaiton as a black-box. In other words, point-collocation NIPC is discretization independent. Moreover, the main problems with the nonlinearities in underlying stochastic partial differentail equation are avoided.
+
+
+%\subsection{Any other algorithm used} 
+%[\textcolor{red}{To be completed}]
 
 \section{Case studies} \label{case_studies}
 
@@ -297,7 +337,8 @@ In addition to the sources of uncertainties identified above, wake meandering ca
 
 \subsection{3-D Cosine hill using RANS and polynomial chaos} \label{cosineHill}
 From the above two case studies we got plenty of idea on the sources and types of uncertainty. However, before attempting to quantify those uncertainties in an actual wind farm, it is wise to work on a model problem which has characteristics of the main problem at hand but is not that complicated. As such, a 3-D cosine hill was chosen to be the model problem. The flow feautures are similar to a complex terrain, however, the flow is smoother.  This model problem is focused on WRA.  RANS $k - \epsilon$  turbulence model and neutral ABL atmospheric stability model were used.
-A UQ study was performed by varying the model constant $C_{\mu}$. The geomtery of the model problem is shown in figure \ref{f:cosine_hill}
+A UQ study was performed by varying the model constant $C_{\mu}$. The geomtery of the model problem is shown in figure \ref{f:cosine_hill}. The dimensions of the hill are: [\textcolor{red}{\textit{Chris, need your help!!!}}]. 
+
 
 \begin{figure}
 \centering
@@ -306,7 +347,63 @@ A UQ study was performed by varying the model constant $C_{\mu}$. The geomtery o
  \label{f:cosine_hill}
 \end{figure}
 
-[\textcolor{red}{To be completed}]
+The reference wind speed for simulations was 8 m/s \textcolor{red}{(??)} at a vertical height of \textcolor{red}{(??)} m. The  model constant $C_{\mu}$ was treated as a random variable and assumed to have a normal distribution with a mean of $0.09$ and a coefficient of variance of $0.1$. A sensitivity analysis was performed by varying $C_{\mu}$ in both the directions of mean. A total of five different values of $C_{\mu}$, viz., 0.090, 0.099, 0.108, 0.081, 0.072, i.e., the nominal value which is also the mean, two values above the mean, and two values below the mean, were considered.
+
+Figures \ref{f:cmu_mean} and \ref{f:cmu_var} show the mean and variance respectively in axial wind speed. The mean flow-field also corresponds to $C_{\mu} = 0.090$. A separated region behind the hill can be seen and this is the nominal flow-field for our study. As expected, the variance is maximum in the region of maximum shear in the flow-field. Figures \ref{f:cmu_099} and \ref{f:cmu_108} show the effect of increasing $C_{\mu}$ and Figures \ref{f:cmu_081} and \ref{f:cmu_072} show the effect of decreasing $C_{\mu}$. As the value of  $C_{\mu}$ is increased, the seprated region behind the hill is underpredicted meaning a choice of $C_{\mu}$ larger than the nominal value would lead to a over-estimate of the AEP. On the other hand, with values of $C_{\mu}$ smaller than the nominal value, the separated region is over-predicted leading to an under-estimate of AEP.
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_Mean.png}
+        \caption{$U_x - Mean (m/s)$}
+        \label{f:cmu_mean}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_Variance.png}
+        \caption{$U_x - Variance (m/s)$}
+	\label{f:cmu_var}
+    \end{subfigure}
+    \caption{Mean and variance in axial wind speed from the chosen samples.}
+\end{figure*}
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_099.png}
+        \caption{$C_{\mu} = 0.099$}
+	\label{f:cmu_099}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_108.png}
+        \caption{$C_{\mu} = 0.108$}
+	\label{f:cmu_108}
+    \end{subfigure}
+    \caption{Effect of increasing $C_{\mu}$ on the axial wind speed flow-field.}
+\end{figure*}
+
+\begin{figure*}[t!]
+    \centering
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_081.png}
+        \caption{$C_{\mu} = 0.081$}
+	\label{f:cmu_081}
+    \end{subfigure}%
+    ~ 
+    \begin{subfigure}[t]{0.5\textwidth}
+        \centering
+        \includegraphics[height=1.5in]{Ux_072.png}
+        \caption{$C_{\mu} = 0.072$}
+	\label{f:cmu_072}
+    \end{subfigure}
+    \caption{Effect of decreasing $C_{\mu}$ on the axial wind speed flow-field.}
+\end{figure*}
 
 \section{Conclusions and future work}
 [\textcolor{red}{To be written based on the final paper.}]
@@ -360,6 +457,14 @@ Witterveen, J.A.S. and Iaccarino, G., ``Simplex stochastic collocation with ENO-
 Najm, H. N., ``Uncertainty Quantification and Polynomial Chaos Techniques in Computational Fluid Dynamics," Annual Review of Fluid Mechanics
 Vol. 41, pp 35-52. 
 
+\bibitem{hosder:aiaa2010}
+Hosder, S. and Walters, R.W.,``Non-Intrusive Polynomial Chaos Methods for Uncertainty Quantification in Fluid Dynamics,'' 48th AIAA Aerosapce Sciences Meeting, 4-7 January 2010, Orlando, Florida.
+
+\bibitem{xiu:jcp2003}
+Xiu, D. and Karniadakis, G.E., ``Modeling Uncertainty in Flow Simulations via Generalized Polynomial Chaos,'' Journal of Computational Physics , Vol. 187, No.1, May 2003, pp. 137-167.
+
+\bibitem{xiu:siam2002}
+Xiu, D. and Karniadakis, G.E., ``The Wiener-Askey Polynomial Chaos for Stochastid Differential Equations,'' Journal of Scientific Computing, Vol. 24, No. 2, 2002, pp. 619-644.
 
 \end{thebibliography}
 
